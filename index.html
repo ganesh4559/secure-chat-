@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum XOR Secure Chat</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Basic styles included here as backup */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            color: #e6edf3;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #58a6ff;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #30363d;
+        }
+        
+        .card {
+            background: rgba(22, 27, 34, 0.9);
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 15px;
+            border: 1px solid #30363d;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        h2 {
+            color: #7ee787;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        h2::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #7ee787;
+            border-radius: 50%;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(46, 160, 67, 0.4);
+        }
+        
+        .key-btn {
+            background: linear-gradient(135deg, #1f6feb 0%, #2f81ff 100%);
+        }
+        
+        .import-btn {
+            background: linear-gradient(135deg, #8957e5 0%, #9a68f0 100%);
+        }
+        
+        .danger-btn {
+            background: linear-gradient(135deg, #da3633 0%, #f85149 100%);
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 14px;
+            margin: 12px 0;
+            background: rgba(13, 17, 23, 0.8);
+            border: 1px solid #444c56;
+            color: white;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+        
+        .output-box {
+            background: rgba(1, 4, 9, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #444c56;
+            word-break: break-all;
+            margin-top: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .key-status {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .key-loaded {
+            background: rgba(13, 83, 23, 0.3);
+            color: #7ee787;
+            border: 1px solid #238636;
+        }
+        
+        .key-missing {
+            background: rgba(90, 30, 30, 0.3);
+            color: #ff7b72;
+            border: 1px solid #da3633;
+        }
+        
+        .success { color: #3fb950; }
+        .warning { color: #f0883e; }
+        .error { color: #ff7b72; }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: rgba(13, 17, 23, 0.9);
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #30363d;
+            backdrop-filter: blur(10px);
+        }
+        
+        .key-info {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(33, 38, 45, 0.8);
+            border-radius: 6px;
+            font-size: 13px;
+            margin-left: 10px;
+            border: 1px solid #444c56;
+        }
+        
+        .instructions {
+            background: rgba(13, 17, 23, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #58a6ff;
+        }
+        
+        .instructions h3 {
+            color: #58a6ff;
+            margin-top: 0;
+        }
+        
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin: 8px 0;
+            padding-left: 5px;
+        }
+        
+        #preview {
+            max-width: 100%;
+            margin-top: 20px;
+            border-radius: 10px;
+            border: 2px solid #30363d;
+            display: none;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-bar">
+            <div>
+                <strong>🔐 Key Status:</strong>
+                <span id="keyStatus" class="key-missing">NO KEY LOADED</span>
+                <span id="keySize" class="key-info">0 bytes</span>
+            </div>
+            <div>
+                <button onclick="clearAll()" class="danger-btn">🗑️ Clear Everything</button>
+            </div>
+        </div>
+
+        <h1>🔐 Quantum XOR Secure Chat - Two-System Communication</h1>
+
+        <!-- Section 1: Key Management -->
+        <div class="card">
+            <h2>🔑 1. Quantum Key Management</h2>
+            <p class="warning">⚠️ Both users must share the SAME key for secure communication.</p>
+            
+            <div class="button-group">
+                <button onclick="generateQKD()">🔑 Generate New Key</button>
+                <button onclick="exportKey()" class="key-btn">📤 Export Key (Sender)</button>
+                <button onclick="importKey()" class="import-btn">📥 Import Key (Receiver)</button>
+                <button onclick="showKey()">👁️ View Current Key</button>
+            </div>
+            
+            <div id="keyActions" style="display: none;">
+                <textarea id="keyText" placeholder="Key will appear here..." rows="4"></textarea>
+                <div class="button-group">
+                    <button onclick="copyKeyToClipboard()">📋 Copy Key</button>
+                    <button onclick="saveKeyToFile()">💾 Save Key to File</button>
+                    <button onclick="loadKeyFromFile()">📂 Load Key from File</button>
+                </div>
+            </div>
+            
+            <div id="qkdKey" class="output-box">
+                No key generated or imported yet.
+            </div>
+        </div>
+
+        <!-- Section 2: Text Encryption -->
+        <div class="card">
+            <h2>📝 2. Text Encryption / Decryption</h2>
+            
+            <div class="key-status" id="textKeyStatus"></div>
+            
+            <textarea id="textInput" placeholder="Enter message to encrypt OR paste encrypted text to decrypt..." rows="4"></textarea>
+            
+            <div class="button-group">
+                <button onclick="encryptText()" class="key-btn">🔒 Encrypt Text</button>
+                <button onclick="decryptText()" class="import-btn">🔓 Decrypt Text</button>
+            </div>
+            
+            <div id="textOutput" class="output-box">
+                <em>Encrypted or decrypted result will appear here...</em>
+            </div>
+        </div>
+
+        <!-- Section 3: Image Encryption -->
+        <div class="card">
+            <h2>🖼️ 3. Image Encryption</h2>
+            
+            <div class="key-status" id="imgKeyStatus"></div>
+            
+            <input type="file" id="imgInput" accept="image/*" />
+            <button onclick="encryptImage()">🔒 Encrypt Image</button>
+            <div id="downloadEnc" style="margin-top: 15px;"></div>
+            
+            <div class="instructions">
+                <h3>📋 Instructions for Sender:</h3>
+                <ol>
+                    <li><strong>Generate</strong> a new key or use existing one</li>
+                    <li><strong>Export</strong> the key and send to receiver securely</li>
+                    <li><strong>Select</strong> image and click "Encrypt Image"</li>
+                    <li><strong>Send</strong> the downloaded .enc file to receiver</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Section 4: Image Decryption -->
+        <div class="card">
+            <h2>🔓 4. Image Decryption</h2>
+            
+            <div class="key-status" id="decryptKeyStatus"></div>
+            
+            <input type="file" id="imgDec" accept=".enc" />
+            <button onclick="decryptImage()">🔓 Decrypt Image</button>
+            
+            <div class="instructions">
+                <h3>📋 Instructions for Receiver:</h3>
+                <ol>
+                    <li><strong>Receive</strong> the key from sender</li>
+                    <li><strong>Import</strong> the key using "Import Key" button</li>
+                    <li><strong>Receive</strong> the .enc file from sender</li>
+                    <li><strong>Select</strong> the .enc file and click "Decrypt Image"</li>
+                    <li><strong>View</strong> decrypted image below</li>
+                </ol>
+            </div>
+            
+            <img id="preview" alt="Decrypted image preview">
+        </div>
+        
+        <div class="card" style="text-align: center; background: rgba(13, 17, 23, 0.6);">
+            <p class="success">✅ Ready for two-system secure communication!</p>
+            <p style="opacity: 0.8;">Generate key → Export/Import → Encrypt/Decrypt → Share securely</p>
+        </div>
+    </div>
+
+    <script>
+        // ========== GLOBAL VARIABLES ==========
+        let quantumKey = [];
+        let keyLoaded = false;
+
+        // ========== STATUS MANAGEMENT ==========
+        function updateStatus() {
+            const keyStatus = document.getElementById('keyStatus');
+            const keySize = document.getElementById('keySize');
+            const textKeyStatus = document.getElementById('textKeyStatus');
+            const imgKeyStatus = document.getElementById('imgKeyStatus');
+            const decryptKeyStatus = document.getElementById('decryptKeyStatus');
+            
+            if (quantumKey.length > 0 && keyLoaded) {
+                keyStatus.textContent = 'KEY LOADED ✓';
+                keyStatus.className = 'key-loaded';
+                keySize.textContent = quantumKey.length + ' bytes';
+                
+                const statusHtml = `<span class="success">✅ Key loaded (${quantumKey.length} bytes)</span>`;
+                textKeyStatus.innerHTML = statusHtml;
+                imgKeyStatus.innerHTML = statusHtml;
+                decryptKeyStatus.innerHTML = statusHtml;
+            } else {
+                keyStatus.textContent = 'NO KEY LOADED';
+                keyStatus.className = 'key-missing';
+                keySize.textContent = '0 bytes';
+                
+                const statusHtml = '<span class="error">❌ No key loaded. Generate or import a key first!</span>';
+                textKeyStatus.innerHTML = statusHtml;
+                imgKeyStatus.innerHTML = statusHtml;
+                decryptKeyStatus.innerHTML = statusHtml;
+            }
+        }
+
+        // ========== KEY MANAGEMENT FUNCTIONS ==========
+        function generateQKD() {
+            quantumKey = new Uint8Array(1024);
+            crypto.getRandomValues(quantumKey);
+            keyLoaded = true;
+            
+            document.getElementById("qkdKey").innerHTML = 
+                `<span class="success">✅ Quantum Key Generated!</span><br>
+                 <strong>Size:</strong> ${quantumKey.length} bytes (${quantumKey.length * 8} bits)<br>
+                 <strong>Role:</strong> <span class="success">SENDER</span> (You will export this key)<br><br>
+                 <span class="warning">⚠️ IMPORTANT: Save this key! It will be lost if you refresh the page.</span>`;
+            
+            updateStatus();
+        }
+
+        function exportKey() {
+            if (!quantumKey.length) {
+                alert("❌ Generate a key first!");
+                return;
+            }
+            
+            let keyBase64 = btoa(String.fromCharCode(...quantumKey));
+            
+            document.getElementById("keyActions").style.display = "block";
+            document.getElementById("keyText").value = keyBase64;
+            
+            document.getElementById("qkdKey").innerHTML = 
+                `<span class="success">✅ Key ready for export!</span><br><br>
+                 <strong>Instructions for SENDER:</strong><br>
+                 1. Copy the key below<br>
+                 2. Send it to the receiver SECURELY<br>
+                 3. Receiver must import this exact key<br><br>
+                 <strong class="warning">⚠️ Keep this key SECRET! Anyone with it can decrypt your messages.</strong>`;
+        }
+
+        function importKey() {
+            let keyText = prompt(`📥 IMPORT KEY (Receiver)\n\nPaste the EXACT key sent by the other person:`);
+            if (!keyText) return;
+            
+            try {
+                keyText = keyText.trim().replace(/\s+/g, '');
+                let bin = atob(keyText);
+                quantumKey = new Uint8Array([...bin].map(c => c.charCodeAt(0)));
+                keyLoaded = true;
+                
+                document.getElementById("qkdKey").innerHTML = 
+                    `<span class="success">✅ Key imported successfully!</span><br>
+                     <strong>Size:</strong> ${quantumKey.length} bytes<br>
+                     <strong>Role:</strong> <span class="success">RECEIVER</span> (You can now decrypt)<br><br>
+                     You can now decrypt messages and files from the sender.`;
+                
+                updateStatus();
+            } catch(e) {
+                alert("❌ Invalid key format!\n\nMake sure you copied the ENTIRE key without extra characters.");
+            }
+        }
+
+        function showKey() {
+            if (!quantumKey.length) {
+                alert("No key loaded!");
+                return;
+            }
+            
+            let keyBase64 = btoa(String.fromCharCode(...quantumKey));
+            let firstChars = keyBase64.substring(0, 50) + "...";
+            let lastChars = "..." + keyBase64.substring(keyBase64.length - 30);
+            
+            document.getElementById("qkdKey").innerHTML = 
+                `<span class="success">🔑 Current Key Info</span><br>
+                 <strong>Size:</strong> ${quantumKey.length} bytes<br>
+                 <strong>Preview:</strong> ${firstChars}<br>
+                 <strong>Ends with:</strong> ${lastChars}<br><br>
+                 <button onclick="exportKey()" class="key-btn">📤 Export This Key</button>`;
+        }
+
+        // ========== KEY FILE OPERATIONS ==========
+        function copyKeyToClipboard() {
+            let keyText = document.getElementById("keyText").value;
+            if (!keyText) return;
+            
+            navigator.clipboard.writeText(keyText).then(() => {
+                alert("✅ Key copied to clipboard!\n\nSend it to the receiver through a secure channel.");
+            }).catch(err => {
+                alert("❌ Failed to copy: " + err);
+            });
+        }
+
+        function saveKeyToFile() {
+            let keyText = document.getElementById("keyText").value;
+            if (!keyText) return;
+            
+            const blob = new Blob([keyText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'quantum_key.key';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert("✅ Key saved as 'quantum_key.key'\n\nShare this file securely with the receiver.");
+        }
+
+        function loadKeyFromFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.key,.txt';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        let keyText = e.target.result.trim();
+                        let bin = atob(keyText);
+                        quantumKey = new Uint8Array([...bin].map(c => c.charCodeAt(0)));
+                        keyLoaded = true;
+                        
+                        document.getElementById("qkdKey").innerHTML = 
+                            `<span class="success">✅ Key loaded from file!</span><br>
+                             <strong>File:</strong> ${file.name}<br>
+                             <strong>Size:</strong> ${quantumKey.length} bytes`;
+                        
+                        updateStatus();
+                        alert("✅ Key loaded successfully from file!");
+                    } catch(err) {
+                        alert("❌ Failed to load key:\n" + err);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // ========== UTILITY FUNCTIONS ==========
+        function clearAll() {
+            if (confirm("⚠️ Clear everything?\n\nThis will delete:\n• Current key\n• All messages\n• Reset all forms")) {
+                quantumKey = [];
+                keyLoaded = false;
+                document.getElementById("textInput").value = "";
+                document.getElementById("textOutput").innerHTML = "<em>Encrypted or decrypted result will appear here...</em>";
+                document.getElementById("qkdKey").innerHTML = "No key generated or imported yet.";
+                document.getElementById("keyActions").style.display = "none";
+                document.getElementById("keyText").value = "";
+                document.getElementById("preview").style.display = "none";
+                document.getElementById("downloadEnc").innerHTML = "";
+                document.getElementById("imgInput").value = "";
+                document.getElementById("imgDec").value = "";
+                
+                updateStatus();
+                alert("✅ All cleared! Ready for new session.");
+            }
+        }
+
+        // ========== CORE ENCRYPTION FUNCTIONS ==========
+        function xorData(data, key) {
+            let output = new Uint8Array(data.length);
+            for (let i = 0; i < data.length; i++) {
+                output[i] = data[i] ^ key[i % key.length];
+            }
+            return output;
+        }
+
+        // ========== TEXT ENCRYPTION/DECRYPTION ==========
+        function encryptText() {
+            if (!quantumKey.length || !keyLoaded) {
+                alert("❌ Generate or import a key first!");
+                return;
+            }
+            
+            let msg = document.getElementById("textInput").value;
+            if (!msg) {
+                alert("Enter a message to encrypt!");
+                return;
+            }
+
+            let msgBytes = new TextEncoder().encode(msg);
+            let encrypted = xorData(msgBytes, quantumKey);
+            let base64 = btoa(String.fromCharCode(...encrypted));
+
+            document.getElementById("textOutput").innerHTML = 
+                `<span class="success">🔒 ENCRYPTED MESSAGE:</span><br><br>
+                 <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #444c56;">
+                    <code style="font-size: 13px;">${base64}</code>
+                 </div>
+                 <button onclick="copyToClipboard('${base64.replace(/'/g, "\\'")}')" class="key-btn">
+                    📋 Copy Encrypted Text
+                 </button>
+                 <p class="success">✅ Send this to the receiver along with the key.</p>`;
+        }
+
+        function decryptText() {
+            if (!quantumKey.length || !keyLoaded) {
+                alert("❌ You must IMPORT the sender's key first!");
+                return;
+            }
+            
+            let cipher = document.getElementById("textInput").value.trim();
+            if (!cipher) {
+                alert("Paste the encrypted message to decrypt!");
+                return;
+            }
+
+            try {
+                let bin = atob(cipher);
+                let encryptedBytes = new Uint8Array([...bin].map(c => c.charCodeAt(0)));
+                let decrypted = xorData(encryptedBytes, quantumKey);
+                let originalText = new TextDecoder().decode(decrypted);
+
+                document.getElementById("textOutput").innerHTML = 
+                    `<span class="success">✅ DECRYPTED MESSAGE:</span><br><br>
+                     <div style="background: rgba(13,83,23,0.2); padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #3fb950;">
+                        <strong style="font-size: 16px;">${originalText}</strong>
+                     </div>
+                     <p class="success">✅ Decryption successful!</p>`;
+            } catch(e) {
+                document.getElementById("textOutput").innerHTML = 
+                    `<span class="error">❌ DECRYPTION FAILED!</span><br><br>
+                     <div style="background: rgba(90,30,30,0.3); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <strong>Possible reasons:</strong><br>
+                        1. Wrong key (need sender's exact key)<br>
+                        2. Message corrupted or modified<br>
+                        3. Not valid encrypted text<br>
+                        4. Key mismatch
+                     </div>`;
+            }
+        }
+
+        // ========== IMAGE ENCRYPTION ==========
+        function encryptImage() {
+            if (!quantumKey.length || !keyLoaded) {
+                alert("❌ Generate or import a key first!");
+                return;
+            }
+
+            let file = document.getElementById("imgInput").files[0];
+            if (!file) {
+                alert("Select an image first!");
+                return;
+            }
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let bytes = new Uint8Array(e.target.result);
+                    let encrypted = xorData(bytes, quantumKey);
+
+                    let blob = new Blob([encrypted], { type: "application/octet-stream" });
+                    let url = URL.createObjectURL(blob);
+
+                    let dl = document.getElementById("downloadEnc");
+                    let fileName = "encrypted_" + Date.now() + ".enc";
+                    dl.innerHTML = `
+                        <a href="${url}" download="${fileName}" class="key-btn" style="text-decoration: none; display: inline-block; padding: 12px 24px;">
+                            ⬇️ Download Encrypted File: ${fileName}
+                        </a>
+                    `;
+                    
+                    document.getElementById("qkdKey").innerHTML += 
+                        `<br><br><span class="warning">⚠️ IMPORTANT: Receiver needs your EXACT key to decrypt this file!</span>`;
+                } catch(err) {
+                    alert("❌ Error encrypting image: " + err);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // ========== IMAGE DECRYPTION ==========
+        function decryptImage() {
+            if (!quantumKey.length || !keyLoaded) {
+                alert("❌ You must IMPORT the sender's key first!");
+                return;
+            }
+            
+            let file = document.getElementById("imgDec").files[0];
+            if (!file) {
+                alert("Upload encrypted image file (.enc)!");
+                return;
+            }
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let bytes = new Uint8Array(e.target.result);
+                    let decrypted = xorData(bytes, quantumKey);
+
+                    // Detect image type
+                    let type = "image/jpeg";
+                    if (decrypted[0] === 0x89 && decrypted[1] === 0x50) type = "image/png";
+                    if (decrypted[0] === 0x47 && decrypted[1] === 0x49) type = "image/gif";
+                    if (decrypted[0] === 0x42 && decrypted[1] === 0x4D) type = "image/bmp";
+                    
+                    let blob = new Blob([decrypted], { type: type });
+                    let url = URL.createObjectURL(blob);
+
+                    let img = document.getElementById("preview");
+                    img.style.display = "block";
+                    img.src = url;
+                    img.alt = "Decrypted Image";
+                    
+                    document.getElementById("textOutput").innerHTML = 
+                        `<span class="success">✅ Image decrypted successfully!</span><br>
+                         <strong>File:</strong> ${file.name}<br>
+                         <strong>Size:</strong> ${decrypted.length} bytes`;
+                } catch(err) {
+                    alert("❌ Failed to decrypt image!\n\nPossible reasons:\n1. Wrong key\n2. Corrupted file\n3. Not an encrypted image file");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // ========== HELPER FUNCTIONS ==========
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("✅ Copied to clipboard!");
+            }).catch(err => {
+                alert("❌ Failed to copy: " + err);
+            });
+        }
+
+        // Initialize status on load
+        updateStatus();
+    </script>
+</body>
+</html>
